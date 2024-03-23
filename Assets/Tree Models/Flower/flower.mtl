@@ -1,0 +1,18 @@
+newmtl plant05
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+map_Kd plant05.png
+
+newmtl flower daisy
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+map_Kd flower daisy.png
+
+newmtl daisy leaf
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+map_Kd daisy leaf.png
+

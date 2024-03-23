@@ -30,5 +30,5 @@ The following guide is a step-by-step basic tutorial. Feel free to explore the f
 
 
 ## Reference
-This dataset was publish in the paper:
+This dataset was published in the paper:
 Raverta Capua F., Schandin J., De Cristóforis, P.: Training point-based deep learning networks for forest segmentation with synthetic data. Presented to the ICPR 2024, publicly available in arxiv. 

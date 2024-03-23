@@ -1,0 +1,167 @@
+﻿#pragma kernel CSMain
+#define MAX_BLADE_SEGMENTS 5
+#define MAX_BLADE_POINTS MAX_BLADE_SEGMENTS * 2 + 1
+#define PI 3.14159265359
+
+struct SourceVertex {
+    float3 positionOS;
+    float3 normalOS;
+};
+struct DrawVertex {
+    float3 positionWS;
+    float height;
+};
+struct DrawTriangle {
+    float3 lightingNormalWS;
+    DrawVertex vertices[3];
+};
+
+struct IndirectArgs {
+    uint numVerticesPerInstance;
+    uint numInstances;
+    uint startVertexIndex;
+    uint startInstanceIndex;
+};
+
+StructuredBuffer<SourceVertex> _SourceVertices;
+AppendStructuredBuffer<DrawTriangle> _DrawTriangles;
+RWStructuredBuffer<IndirectArgs> _IndirectArgsBuffer;
+
+int _NumSourceVertices;
+int _MaxBladeSegments;
+float _JitterFactor;
+float _MaxBendAngle;
+float _BladeCurvature;
+float _BladeHeight;
+float _BladeHeightVariance;
+float _BladeWidth;
+float _BladeWidthVariance;
+float4x4 _LocalToWorld;
+
+// Pseudorandom number. By Ronja Böhringer
+float rand(float4 value) {
+    float4 smallValue = sin(value);
+    float random = dot(smallValue, float4(12.9898, 78.233, 37.719, 9.151));
+    random = frac(sin(random) * 143758.5453);
+    return random;
+}
+
+float rand(float3 pos, float offset) {
+    return rand(float4(pos, offset));
+}
+
+float randNegative1to1(float3 pos, float offset) {
+    return rand(pos, offset) * 2 - 1;
+}
+
+// Rotation around axis. By Keijiro Takahashi
+float3x3 AngleAxis3x3(float angle, float3 axis) {
+    float c, s;
+    sincos(angle, s, c);
+
+    float t = 1 - c;
+    float x = axis.x;
+    float y = axis.y;
+    float z = axis.z;
+
+    return float3x3(
+        t * x * x + c, t * x * y - s * z, t * x * z + s * y,
+        t * x * y + s * z, t * y * y + c, t * y * z - s * x,
+        t * x * z - s * y, t * y * z + s * x, t * z * z + c
+    );
+}
+
+float3 GetJitterGridOffset(float3 v) {
+    float jitterAngle = rand(v, 0) * PI * 2;
+    return float3(cos(jitterAngle), 0, sin(jitterAngle)) * _JitterFactor;
+}
+
+float2 GetBladeDimensions(float3 positionWS) {
+    float width = randNegative1to1(positionWS, 0) * _BladeWidthVariance + _BladeWidth;
+    float height = randNegative1to1(positionWS, 0) * _BladeHeightVariance + _BladeHeight;
+    return float2(width, height);
+}
+
+DrawVertex SetupBladePoint(float3 anchorWS, float2 dimensions, float3x3 tsToWS, float2 uv) {
+    // Calculate the offset in tangent space based on the UV and width/height
+    float3 offsetTS = float3((uv.x - 0.5f) * dimensions.x, 0, uv.y * dimensions.y);
+    // Calculate the offset in world space using the rotation matrix
+    float3 offsetWS = mul(tsToWS, offsetTS);
+    
+    float3 positionWS = anchorWS + offsetWS;
+    
+    DrawVertex output = (DrawVertex) 0;
+    output.positionWS = positionWS;
+    output.height = uv.y;
+    return output;
+}
+
+float3x3 HeightTransform(float v, float3x3 twistMatrix, float maxBend) {
+    float3x3 bendMatrix = AngleAxis3x3(maxBend * pow(abs(v), _BladeCurvature), float3(1, 0, 0));
+    return mul(twistMatrix, bendMatrix);
+}
+
+[numthreads(128,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID) {
+    if ((int) id.x > _NumSourceVertices) {
+        return;
+    }
+
+    float3 positionOS = _SourceVertices[id.x].positionOS;
+    float3 normalOS = _SourceVertices[id.x].normalOS;
+    float3 offsetOS = GetJitterGridOffset(positionOS);
+    float3 positionWS = (mul(_LocalToWorld, float4(positionOS, 1)) + float4(offsetOS, 1)).xyz;
+    
+    // Orthonormal generators for transformation matrix (Tangent -> World).
+    float3 normalWS = float3(0, 1, 0);
+    float3 tangentWS = normalize(float3(1, 0, 0));
+    float3 bitangentWS = normalize(cross(tangentWS, normalWS));
+    float3x3 tsToWS = transpose(float3x3(tangentWS, bitangentWS, normalWS));
+
+    float2 dimensions = GetBladeDimensions(positionWS);
+    
+    // The twist matrix decides which direction the grass blade will face
+    float3x3 twistMatrix = AngleAxis3x3(rand(positionWS, 2) * PI * 2, float3(0, 0, 1));
+    
+    // This bend angle decides how much the tip bends towards 90 degrees
+    float maxBend = rand(positionWS, 3) * PI * 0.5f * _MaxBendAngle;
+    float3x3 bendMatrix = AngleAxis3x3(maxBend, float3(1, 0, 0));
+    
+    int numBladeSegments = min(MAX_BLADE_SEGMENTS, max(1, _MaxBladeSegments));
+    
+    // Create an array to hold blade points
+    DrawVertex vertices[MAX_BLADE_POINTS];
+
+    // Construct the square segments of the grass blade
+    for (int i = 0; i < numBladeSegments; i++) {
+        float v = i / (float) numBladeSegments;
+        float shrinkFactor = 0.1;
+        float u = i * shrinkFactor / 2;
+
+        float3x3 transform = mul(tsToWS, HeightTransform(v, twistMatrix, maxBend));
+        
+        vertices[i * 2] = SetupBladePoint(positionWS, dimensions, transform, float2(u, v));
+        vertices[i * 2 + 1] = SetupBladePoint(positionWS, dimensions, transform, float2(1 - u, v));
+    }
+    
+    // Calculate the transform for the blade tip
+    float3x3 tipTransform = mul(tsToWS, HeightTransform(1, twistMatrix, maxBend));
+    // Append the tip vertex
+    vertices[numBladeSegments * 2] = SetupBladePoint(positionWS, dimensions, tipTransform, float2(0.5, 1));
+    
+    // Add triangles from the array into the draw buffer
+    int numTriangles = (numBladeSegments - 1) * 2 + 1;
+    for (int j = 0; j < numTriangles; j++) {
+        DrawTriangle tri = (DrawTriangle) 0;
+        tri.lightingNormalWS = mul(_LocalToWorld, float4(normalOS, 1)).xyz;
+        tri.vertices[0] = vertices[j];
+        tri.vertices[1] = vertices[j + 1];
+        tri.vertices[2] = vertices[j + 2];
+        _DrawTriangles.Append(tri);
+    }
+    
+    // InterlockedAdd(a, b) adds b to a and stores the value in a. It is thread-safe
+    // This call counts the number of vertices, storing it in the indirect arguments
+    // This tells the renderer how many vertices are in the mesh in DrawProcedural
+    InterlockedAdd(_IndirectArgsBuffer[0].numVerticesPerInstance, numTriangles * 3);
+}

@@ -1,0 +1,51 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+Texture2D<float4> _DensityTex;
+int _Window;
+int _MaxBladesPerTile;
+int _GeneratedPointsCount;
+AppendStructuredBuffer<float2> _SpawnPointsBuffer;
+RWStructuredBuffer<int> _GeneratedPointsCountBuffer;
+
+float GetDensityForWindow(int i, int j) {
+    float density = 0;
+    for (int u = 0; u < _Window; u++)
+    {
+        for (int v = 0; v < _Window; v++)
+        {
+            int2 coords = int2(i, j) + int2(u, v);
+            density = density + _DensityTex[coords.xy].r;
+        }
+    }
+    return density / (_Window * _Window);
+}
+
+
+[numthreads(8, 8, 1)]
+void CSMain (uint3 id : SV_DispatchThreadID) {
+    int2 coords = int2(id.x * _Window, id.y * _Window);
+    float density = GetDensityForWindow(coords.x, coords.y);
+    
+    if (density < 0.00001f)  // Might be 0
+        return;
+
+    float gridSize = _Window / sqrt(_MaxBladesPerTile * density);
+
+    if (gridSize < 0.0001f)
+        return;
+
+    uint count = 0;
+    for (float x = 0; x < _Window; x += gridSize) {
+        for (float y = 0; y < _Window; y += gridSize) {
+            if (count >= _MaxBladesPerTile)
+                // It may happen in some cases
+                return; 
+            _SpawnPointsBuffer.Append(float2(coords.x + x, coords.y + y));
+            count++;
+            InterlockedAdd(_GeneratedPointsCountBuffer[0], 1);
+        }
+    }
+}

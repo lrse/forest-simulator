@@ -1,0 +1,12 @@
+newmtl palm07
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+map_Kd palm07.png
+
+newmtl barkpalm
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+map_Kd barkpalm.png
+

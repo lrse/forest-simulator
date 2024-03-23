@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 701fb975eb2c7b14897526d8706967c0, type: 3}
+  m_Name: GrassData
+  m_EditorClassIdentifier: 
+  jitterFactor: 0.8
+  densityPipeline: {fileID: 11400000, guid: 41372374fb3cd8045a7c8102c760bb10, type: 2}
+  maxSegments: 5
+  maxBendAngle: 0.52
+  bladeCurvature: 1.12
+  bladeHeight: 2.68
+  heightVariance: 0.42
+  bladeWidth: 0.1
+  widthVariance: 0.08
