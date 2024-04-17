@@ -28,7 +28,7 @@ The following guide is a step-by-step basic tutorial. Feel free to explore the f
    8. Cactae: 7
    9. Deadwood: 8
 
-# How to use the survey simulator
+### How to use the survey simulator
 
 The following guide is a step-by-step basic tutorial. Feel free to explore the functionalities and adapt them to your needs. Make sure that in the script "Flight/Output/ImageCapture/Geotagging/Geotagger.cs", in the line 32 the file name and location of the exiftool.exe file is well set. Modify it if it is changed, or if another version is used (for example, the linux version of the executable). 
 
