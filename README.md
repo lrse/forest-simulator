@@ -28,6 +28,14 @@ The following guide is a step-by-step basic tutorial. Feel free to explore the f
    8. Cactae: 7
    9. Deadwood: 8
 
+# How to use the survey simulator
+
+The following guide is a step-by-step basic tutorial. Feel free to explore the functionalities and adapt them to your needs. Make sure that in the script "Flight/Output/ImageCapture/Geotagging/Geotagger.cs", in the line 32 the file name and location of the exiftool.exe file is well set. Modify it if it is changed, or if another version is used (for example, the linux version of the executable). 
+
+1. Add the script "Flight/DroneControl.cs" to the camera object. 
+2. In the inspector, with the camera selected and under the DroneControl configuration, drag the "Custom Terrain" object from the hierarchy to the Survey Area Configuration -> Object of Interest.
+3. Add some GCP prefabs to the terrain manually.
+4. Enter Play mode. 
 
 ## Reference
 This dataset was published in the paper:
