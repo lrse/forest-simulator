@@ -2,6 +2,7 @@
 Forest Simulator based on Unity
 
 The present simulator aims to generate forest scenes procedurally, using a general seed to ensure its repeatability. The Simulator works in Editor Mode. 
+Built and tested in Unity Editor version 2022.3.20f1.
 
 
 ## How to use:
@@ -33,9 +34,11 @@ The following guide is a step-by-step basic tutorial. Feel free to explore the f
 The following guide is a step-by-step basic tutorial. Feel free to explore the functionalities and adapt them to your needs. Make sure that in the script "Flight/Output/ImageCapture/Geotagging/Geotagger.cs", in the line 32 the file name and location of the exiftool.exe file is well set. Modify it if it is changed, or if another version is used (for example, the linux version of the executable). 
 
 1. Add the script "Flight/DroneControl.cs" to the camera object. 
-2. In the inspector, with the camera selected and under the DroneControl configuration, drag the "Custom Terrain" object from the hierarchy to the Survey Area Configuration -> Object of Interest.
-3. Add some GCP prefabs to the terrain manually.
+2. In the inspector, with the camera selected and under the DroneControl configuration, drag the "Custom Terrain" object from the hierarchy to the Survey Area Configuration -> Object of Interest. Set "Enable Segmentation" if you want to export categorized images with color-code.
+3. Add some GCP prefabs to the terrain manually. A pipeline can be used to add them automatically when generating the scene (Data/Standard Pipelines/GCPs.asset can be used as an example).
 4. Enter Play mode. 
+
+![ALT TEXT](./images/Image.png) ![ALT TEXT](./images/Image_Segmented.png)
 
 ## Reference
 This dataset was published in the paper:

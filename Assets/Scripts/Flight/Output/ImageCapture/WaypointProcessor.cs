@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using static Mission;
+using UnityEngine.Rendering;
 
 public class WaypointProcessor {
 
@@ -23,6 +24,23 @@ public class WaypointProcessor {
 
     public delegate void AllWaypointsProcessedEvent();
     public event AllWaypointsProcessedEvent OnProcessedAllWaypoints;
+
+    private bool saveSegmentationImages;
+    private Camera segCamera;
+    private GameObject segGameObject;
+    private RenderTexture segRenderTexture;
+
+    private Dictionary<string, Color> objectTagColors;
+    private List<GameObject> objectsToRender = new List<GameObject>();
+    private Dictionary<GameObject,Material> originalMaterial = new Dictionary<GameObject, Material>();
+    private Dictionary<GameObject, Material> replacementMaterial = new Dictionary<GameObject, Material>();
+
+    private Shader shader;
+    private Shader grassShader;
+    private ProceduralGrassRenderer grassRenderer;
+    private Material grassMaterial;
+    private Material replacementGrassMaterial;
+    private GameObject terraformer;
 
     public WaypointProcessor(CameraDefinition cameraDefinition, SurveyArea surveyArea, Georeferencing georeferencing, int totalWaypoints, string folderPath) {
         // Build GameObject
@@ -51,6 +69,31 @@ public class WaypointProcessor {
         this.gcpManager = new GroundControlPointManager(cameraDefinition, surveyArea);
         this.geoTagger = new GeoTagger(cameraDefinition, georeferencing);
         this.georeferencing = georeferencing;
+
+        terraformer = GameObject.Find("Terraformer");
+        if (terraformer == null) { Debug.Log("Terraformer not found"); };
+        saveSegmentationImages = Camera.main.GetComponent<DroneControl>().saveSegmentationImages;
+        if (saveSegmentationImages)
+        {
+            this.shader = Shader.Find("Custom/TreeUnlitShader");
+            this.grassShader = Shader.Find("Grass/GrassBlades");
+
+            this.objectTagColors = new Dictionary<string, Color>();
+
+            grassRenderer = terraformer.GetComponent<ProceduralGrassRenderer>();
+            grassMaterial = grassRenderer.instantiatedMaterial;
+            replacementGrassMaterial = new Material(this.grassShader);
+
+            SetObjectTags();
+            SetObjectsToSegment();
+
+            // Set Segmentation Camera
+            segGameObject = new GameObject("Image Segment Capture");
+            segRenderTexture = new RenderTexture(cameraDefinition.resolutionX, cameraDefinition.resolutionY, 24);
+            segCamera = segGameObject.AddComponent<Camera>();
+            segCamera.CopyFrom(camera);
+            segCamera.targetTexture = segRenderTexture;
+        }
 
         // Prepare the folder
         PrepareFolder(folderPath);
@@ -110,6 +153,95 @@ public class WaypointProcessor {
 
                 // Geotag the image properly
                 geoTagger.TagImage(waypoint, Path.Combine(folderPath, imageName));
+                
+                // Save Segmentation Images
+
+                // Render the camera and store it in a texture
+                if(saveSegmentationImages)
+                {
+                    segGameObject.transform.SetPositionAndRotation(waypoint.dronePosition, waypoint.droneRotation);
+
+                    foreach (GameObject go in this.objectsToRender)
+                    {
+                        Renderer rd = go.GetComponent<Renderer>();
+                        if (rd != null)
+                        {
+                            rd.material = replacementMaterial[go];
+
+                        }
+                        else
+                        {
+                            // Submeshes
+                            foreach (GameObject child in go.GetChildren())
+                            {
+                                rd = child.GetComponent<Renderer>();
+                                if (rd != null)
+                                {
+                                    rd.material = replacementMaterial[child];
+                                }
+                            }
+                        }
+                    }
+
+                    grassRenderer.instantiatedMaterial = replacementGrassMaterial;
+                    grassRenderer.SetPointsBuffersAndKernel();
+
+                    yield return null;
+
+                    Texture2D screenShotSegmented = new Texture2D(segRenderTexture.width, segRenderTexture.height, TextureFormat.RGB24, false);
+                    segCamera.Render();
+
+                    yield return null;
+
+                    // Read the render texture into the Texture2D
+                    RenderTexture.active = segRenderTexture;
+                    screenShotSegmented.ReadPixels(new Rect(0, 0, segRenderTexture.width, segRenderTexture.height), 0, 0);
+                    RenderTexture.active = null; //Added to avoid errors
+
+                    yield return null;
+
+                    foreach (GameObject go in this.objectsToRender)
+                    {
+                        Renderer rd = go.GetComponent<Renderer>();
+                        if (rd != null)
+                        {
+                            rd.material = originalMaterial[go];
+                        }
+                        else
+                        {
+                            // Submeshes
+                            foreach (GameObject child in go.GetChildren())
+                            {
+                                rd = child.GetComponent<Renderer>();
+                                if (rd != null)
+                                {
+                                    rd.material = originalMaterial[child];
+                                }
+                            }
+                        }
+                    }
+                    grassRenderer.instantiatedMaterial = grassMaterial;
+                    grassRenderer.SetPointsBuffersAndKernel();
+                    yield return null;
+
+                    // Check for visible GCPs from the curreny waypoint
+                    string imageNameSegmented = GetImageSegmentedName(waypointData.waypointNumber);
+                    gcpManager.CheckForVisibleGCPs(screenShotSegmented, camera, imageNameSegmented);
+
+                    yield return null;
+
+                    // Save the texture into disk and then delete it
+                    SaveImage(screenShotSegmented, imageNameSegmented);
+                    Object.Destroy(screenShotSegmented);
+                    yield return null;
+
+                    // Geotag the image properly
+                    geoTagger.TagImage(waypoint, Path.Combine(folderPath, imageNameSegmented));
+
+                    yield return null;
+                }
+
+
 
                 // Update number or waypoints processed
                 waypointsProcessed++;
@@ -124,7 +256,7 @@ public class WaypointProcessor {
         // Destroy the created GameObject and render texture
         Object.Destroy(gameObject);
         Object.Destroy(renderTexture);
-        
+
         // Write GCP file to disk
         gcpManager.WriteToFile(georeferencing, folderPath);
 
@@ -133,7 +265,7 @@ public class WaypointProcessor {
     }
 
     private void SaveImage(Texture2D screenShot, string imageName) {
-        byte[] bytes = screenShot.EncodeToJPG();
+        byte[] bytes = screenShot.EncodeToPNG();
         File.WriteAllBytes(Path.Combine(folderPath, imageName), bytes);
     }
 
@@ -146,7 +278,7 @@ public class WaypointProcessor {
 
     private static string GetImageName(int waypointNumber) {
         string number = waypointNumber.ToString().PadLeft(4, '0');
-        return "Image_" + number + ".jpg";
+        return "Image_" + number + ".png";
     }
 
     class WaypointData {
@@ -159,5 +291,73 @@ public class WaypointProcessor {
             this.waypointNumber = waypointNumber;
         }
 
+    }
+
+    private void SetObjectTags()
+    {
+        this.objectTagColors["Terrain"] = Color.blue;
+        this.objectTagColors["Trunk"] = Color.cyan;
+        this.objectTagColors["Canopy"] = Color.green;
+        this.objectTagColors["Branches"] = new Color(1, 1, 0, 1);//(0.39f, 0.19f, 0.04f, 1); //brown
+        this.objectTagColors["Bushes"] = Color.yellow;
+        this.objectTagColors["Understorey"] = new Color(1, 0, 1, 1);//(0.976f, 0.39f, 0.04f, 1); //orange
+        this.objectTagColors["Grass"] = Color.red; 
+        this.objectTagColors["Cactae"] = new Color(0.19f, 0.118f, 0.586f, 1); // violet
+        this.objectTagColors["Deadwood"] = Color.grey;
+        this.objectTagColors["GCP"] = Color.black;
+    }
+
+    private void SetObjectsToSegment()
+    {
+        List<string> tags = new List<string> { "Terrain", "Trunk", "Canopy", "Branches", "Bushes", "Understorey", "Cactae", "Deadwood", "GCP" };//, "Grass" };
+        
+        foreach (string tag in tags)
+        {
+            GameObject[] objectswithTag = GameObject.FindGameObjectsWithTag(tag);
+            this.objectsToRender.AddRange(objectswithTag);
+        }
+
+        foreach(GameObject go in objectsToRender)
+        {
+            Renderer rd = go.GetComponent<Renderer>();
+            if (rd != null)
+            {
+            Material replacementMaterial = new Material(this.shader);
+            replacementMaterial.CopyMatchingPropertiesFromMaterial(rd.material);
+            replacementMaterial.color = this.objectTagColors[go.tag];
+
+            if (this.originalMaterial.ContainsKey(go) != true)
+            {
+                this.originalMaterial.Add(go, rd.material);
+                this.replacementMaterial.Add(go, replacementMaterial);
+            }
+            } else
+            { 
+                foreach (GameObject child in go.GetChildren())
+                {
+                    Renderer rdChild = child.GetComponent<Renderer>();
+                    Material replacementMaterial = new Material(this.shader);
+                    replacementMaterial.color = this.objectTagColors[child.tag];
+                    if (this.originalMaterial.ContainsKey(child) != true)
+                    {
+                        this.originalMaterial.Add(child, rdChild.material);
+                        this.replacementMaterial.Add(child, replacementMaterial);
+                    }
+                }
+            }
+        }
+
+        // Add grass color
+        // As this was not working we will now create a new material with a grass shader and change ir from the original. 
+        replacementGrassMaterial.CopyMatchingPropertiesFromMaterial(grassMaterial);
+        replacementGrassMaterial.SetColor("_TipColor", this.objectTagColors["Grass"]);
+        replacementGrassMaterial.SetColor("_BaseColor", this.objectTagColors["Grass"]);
+
+    }
+
+    private static string GetImageSegmentedName(int waypointNumber)
+    {
+        string number = waypointNumber.ToString().PadLeft(4, '0');
+        return "Image_Segmented_" + number + ".png";
     }
 }

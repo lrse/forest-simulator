@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: End
   m_EditorClassIdentifier: 
   graph: {fileID: 11400000}
-  position: {x: 568, y: -168}
+  position: {x: 56, y: -168}
   ports:
     keys:
     - texture
@@ -24,7 +24,7 @@ MonoBehaviour:
         Culture=neutral, PublicKeyToken=null
       connections:
       - fieldName: output
-        node: {fileID: 623959633461736123}
+        node: {fileID: 6587230758669515914}
         reroutePoints: []
       _direction: 0
       _connectionType: 0
@@ -94,8 +94,6 @@ MonoBehaviour:
   - {fileID: -65755298189958366}
   - {fileID: -446460334402549968}
   - {fileID: 6587230758669515914}
-  - {fileID: 623959633461736123}
-  - {fileID: 816776752422815209}
 --- !u!114 &623959633461736123
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -203,7 +201,7 @@ MonoBehaviour:
   m_Name: One Minus
   m_EditorClassIdentifier: 
   graph: {fileID: 11400000}
-  position: {x: -488, y: -200}
+  position: {x: -440, y: -200}
   ports:
     keys:
     - tex
@@ -226,8 +224,8 @@ MonoBehaviour:
       _typeQualifiedName: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
         Culture=neutral, PublicKeyToken=null
       connections:
-      - fieldName: tex
-        node: {fileID: 816776752422815209}
+      - fieldName: texture
+        node: {fileID: -446460334402549968}
         reroutePoints: []
       _direction: 1
       _connectionType: 0

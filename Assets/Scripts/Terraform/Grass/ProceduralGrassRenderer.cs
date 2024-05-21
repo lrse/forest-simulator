@@ -36,7 +36,7 @@ public class ProceduralGrassRenderer : MonoBehaviour {
 
     // We have to instantiate the shaders so each points to their unique compute buffers
     private ComputeShader instantiatedGrassComputeShader;
-    private Material instantiatedMaterial;
+    public Material instantiatedMaterial;
 
     private int idGrassKernel;
     private int dispatchSize;
@@ -160,15 +160,7 @@ public class ProceduralGrassRenderer : MonoBehaviour {
         instantiatedGrassComputeShader = Instantiate(grassComputeShader);
         instantiatedMaterial = Instantiate(grassMaterial);
 
-        GeneratePoints();
-        TransformPointsToWS();
-        CreateBuffers();
-        SetBuffers();
-
-        // Cache the kernel IDs we will be dispatching
-        idGrassKernel = instantiatedGrassComputeShader.FindKernel("CSMain");
-        instantiatedGrassComputeShader.GetKernelThreadGroupSizes(idGrassKernel, out uint threadGroupSize, out _, out _);
-        dispatchSize = Mathf.CeilToInt((float)spawnPointsWS.Length / threadGroupSize);
+        SetPointsBuffersAndKernel();
     }
 
     private void OnDisable() {
@@ -194,5 +186,18 @@ public class ProceduralGrassRenderer : MonoBehaviour {
                 layer: gameObject.layer
             );
         }
+    }
+
+    public void SetPointsBuffersAndKernel() {
+        GeneratePoints();
+        TransformPointsToWS();
+        CreateBuffers();
+        SetBuffers();
+
+        // Cache the kernel IDs we will be dispatching
+        idGrassKernel = instantiatedGrassComputeShader.FindKernel("CSMain");
+        instantiatedGrassComputeShader.GetKernelThreadGroupSizes(idGrassKernel, out uint threadGroupSize, out _, out _);
+        dispatchSize = Mathf.CeilToInt((float)spawnPointsWS.Length / threadGroupSize);
+
     }
 }

@@ -29,7 +29,7 @@ public class GeoTagger  {
             process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
             process.StartInfo.CreateNoWindow = true;
             process.EnableRaisingEvents = true;
-            process.StartInfo.FileName = Path.Combine(Directory.GetCurrentDirectory(), "../../ExifTool/Image-ExifTool-12.42/exiftool");
+            process.StartInfo.FileName = Path.Combine(Directory.GetCurrentDirectory(), "ExifTool/exiftool"); 
             process.StartInfo.Arguments = string.Format("-overwrite_original -GPSLatitude={0} -GPSLatitudeRef={1} -GPSLongitude={2} -GPSLongitudeRef={3} -GPSAltitude={4} -GPSAltitudeRef=\"Above Sea Level\" -GPSDOP={5} -FocalLength={6} \"{7}\""
                 , Math.Abs(coordinate.latitude), coordinate.latitudeRef, Math.Abs(coordinate.longitude), coordinate.longitudeRef, coordinate.altitude, georeferencing.dilutionOfPrecision, cameraDefinition.focalLength, imagePath);
             process.Start();

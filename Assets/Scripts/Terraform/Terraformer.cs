@@ -13,7 +13,7 @@ public class Terraformer : MonoBehaviour {
     // Land properties
     public CustomTerrainData terrainData;
     private GameObject terrainObject;
-    private ProceduralGrassRenderer grassRenderer;
+    public ProceduralGrassRenderer grassRenderer;
 
     // Export
     public int exportTerrainPoints = 1000000;

@@ -1,0 +1,278 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-5438202060856855352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9c85d53a044555d9b505fffe4e81f07, type: 3}
+  m_Name: Source
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: -248, y: 120}
+  ports:
+    keys:
+    - output
+    values:
+    - _fieldName: output
+      _node: {fileID: -5438202060856855352}
+      _typeQualifiedName: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+      connections:
+      - fieldName: spawnTexture
+        node: {fileID: 201977963363289992}
+        reroutePoints: []
+      _direction: 1
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  sourceType: 4
+  texture: {fileID: 0}
+  pipeline: {fileID: 0}
+  sourceNode: {fileID: 0}
+  noiseData: {fileID: 0}
+  scale: 0
+  octaves: 4
+  persistance: 0.25
+  lacunarity: 0.25
+  seed: 71
+  offset: {x: 0, y: 0}
+  centroids: 1
+  size: 256
+  output: {fileID: 0}
+  dirty: 1
+--- !u!114 &-990613208251593524
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9c85d53a044555d9b505fffe4e81f07, type: 3}
+  m_Name: Source
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: -616, y: -408}
+  ports:
+    keys:
+    - output
+    values:
+    - _fieldName: output
+      _node: {fileID: -990613208251593524}
+      _typeQualifiedName: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+      connections:
+      - fieldName: densityTexture
+        node: {fileID: 152989175010510912}
+        reroutePoints: []
+      _direction: 1
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  sourceType: 0
+  texture: {fileID: 0}
+  pipeline: {fileID: 0}
+  sourceNode: {fileID: 0}
+  noiseData: {fileID: 0}
+  scale: 150
+  octaves: 4
+  persistance: 0.25
+  lacunarity: 0.25
+  seed: 71
+  offset: {x: 0, y: 0}
+  centroids: 0
+  size: 256
+  output: {fileID: 0}
+  dirty: 1
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d78d808dfd2d3aa53956b7863f3c7901, type: 3}
+  m_Name: Pine-Forest GCPs
+  m_EditorClassIdentifier: 
+  nodes:
+  - {fileID: 152989175010510912}
+  - {fileID: 201977963363289992}
+  - {fileID: -990613208251593524}
+  - {fileID: -5438202060856855352}
+--- !u!114 &152989175010510912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8fb4128c6888f24e8962525eca1bf65, type: 3}
+  m_Name: Variable Poisson Sampler
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: -72, y: -328}
+  ports:
+    keys:
+    - densityTexture
+    - output
+    values:
+    - _fieldName: densityTexture
+      _node: {fileID: 152989175010510912}
+      _typeQualifiedName: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+      connections:
+      - fieldName: output
+        node: {fileID: -990613208251593524}
+        reroutePoints: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: output
+      _node: {fileID: 152989175010510912}
+      _typeQualifiedName: System.Collections.Generic.List`1[[UnityEngine.Vector2,
+        UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]],
+        mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+      connections:
+      - fieldName: spawnPointsOS
+        node: {fileID: 201977963363289992}
+        reroutePoints: []
+      _direction: 1
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  minRadius: 30
+  maxRadius: 8
+  sampleRejection: 30
+  sampleLimit: 10000
+  seed: 71
+  size: 256
+  densityTexture: {fileID: 0}
+  output:
+  - {x: 209, y: 166}
+  - {x: 247.68745, y: 181.8175}
+  - {x: 219.20993, y: 211.63187}
+  - {x: 219.02475, y: 252.78519}
+  - {x: 252.48407, y: 140.86804}
+  - {x: 178.05954, y: 211.10764}
+  - {x: 171.24924, y: 254.18735}
+  - {x: 200.16846, y: 125.14763}
+  - {x: 234.63078, y: 99.94418}
+  - {x: 155.4867, y: 145.71046}
+  - {x: 123.63514, y: 244.57191}
+  - {x: 139.83748, y: 192.33832}
+  - {x: 156.4346, y: 95.566055}
+  - {x: 80.484085, y: 249.48367}
+  - {x: 195.37967, y: 53.33227}
+  - {x: 59.88978, y: 210.60692}
+  - {x: 36.531765, y: 251.41273}
+  - {x: 87.56031, y: 181.18248}
+  - {x: 23.272282, y: 193.5595}
+  - {x: 100.177414, y: 107.20823}
+  - {x: 91.96355, y: 55.643665}
+  - {x: 112.0429, y: 1.7677727}
+  - {x: 24.383076, y: 149.05313}
+  - {x: 57.576122, y: 4.9582777}
+  - {x: 38.099205, y: 58.22941}
+  - {x: 252.27997, y: 55.073353}
+  - {x: 76.182175, y: 143.76852}
+  - {x: 0.87008667, y: 3.697833}
+  - {x: 48.07525, y: 110.63404}
+  - {x: 235.96237, y: 6.0616302}
+  - {x: 171.98439, y: 1.4708977}
+--- !u!114 &201977963363289992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 039ac84016f7dff40b4d93e18227c6bf, type: 3}
+  m_Name: Placement
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: 408, y: -120}
+  ports:
+    keys:
+    - spawnPointsOS
+    - spawnTexture
+    values:
+    - _fieldName: spawnPointsOS
+      _node: {fileID: 201977963363289992}
+      _typeQualifiedName: System.Collections.Generic.List`1[[UnityEngine.Vector2,
+        UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]],
+        mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+      connections:
+      - fieldName: output
+        node: {fileID: 152989175010510912}
+        reroutePoints: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: spawnTexture
+      _node: {fileID: 201977963363289992}
+      _typeQualifiedName: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+      connections:
+      - fieldName: output
+        node: {fileID: -5438202060856855352}
+        reroutePoints: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  spawnPointsOS:
+  - {x: 209, y: 166}
+  - {x: 247.68745, y: 181.8175}
+  - {x: 219.20993, y: 211.63187}
+  - {x: 219.02475, y: 252.78519}
+  - {x: 252.48407, y: 140.86804}
+  - {x: 178.05954, y: 211.10764}
+  - {x: 171.24924, y: 254.18735}
+  - {x: 200.16846, y: 125.14763}
+  - {x: 234.63078, y: 99.94418}
+  - {x: 155.4867, y: 145.71046}
+  - {x: 123.63514, y: 244.57191}
+  - {x: 139.83748, y: 192.33832}
+  - {x: 156.4346, y: 95.566055}
+  - {x: 80.484085, y: 249.48367}
+  - {x: 195.37967, y: 53.33227}
+  - {x: 59.88978, y: 210.60692}
+  - {x: 36.531765, y: 251.41273}
+  - {x: 87.56031, y: 181.18248}
+  - {x: 23.272282, y: 193.5595}
+  - {x: 100.177414, y: 107.20823}
+  - {x: 91.96355, y: 55.643665}
+  - {x: 112.0429, y: 1.7677727}
+  - {x: 24.383076, y: 149.05313}
+  - {x: 57.576122, y: 4.9582777}
+  - {x: 38.099205, y: 58.22941}
+  - {x: 252.27997, y: 55.073353}
+  - {x: 76.182175, y: 143.76852}
+  - {x: 0.87008667, y: 3.697833}
+  - {x: 48.07525, y: 110.63404}
+  - {x: 235.96237, y: 6.0616302}
+  - {x: 171.98439, y: 1.4708977}
+  spawnTexture: {fileID: 0}
+  seed: 71
+  enableSpawnTextureUsage: 1
+  enableScaleRandomizer: 1
+  enableTwistRandomizer: 1
+  enableSpinRandomizer: 1
+  scaleFactorMinMax: {x: 1, y: 1.5}
+  prefabs:
+  - {fileID: 4901712792988182538, guid: fdf1da9d1b63a39c58a6441870d6a368, type: 3}
+  maxNormalAngle: 2

@@ -6,13 +6,15 @@ public class DroneControl : MonoBehaviour {
 
     #region External Configuration
 
+    [Tooltip("The path to the folder where the images will be saved. Everything inside the folder will be deleted before starting.")]
+    public string folderPath = "Images";
+    public bool saveSegmentationImages = true;
+
     public ConfigurableSurveyArea surveyAreaConfiguration;
     public ConfigurableCameraDefinition cameraDefinitionConfiguration;
     public ConfigurableFlightSpecs flightSpecsConfiguration;
     public ConfigurableGeoreferencing georeferencingConfiguration;
 
-    [Tooltip("The path to the folder where the images will be saved. Everything inside the folder will be deleted before starting.")]
-    public string folderPath = "Images";
 
     [Header("Debug")]
     [Tooltip("Draw the flight plan grid")]

@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: WindowSamplerParallel
   m_EditorClassIdentifier: 
   window: 4
-  maxBladesPerTile: 2048
+  maxBladesPerTile: 512
