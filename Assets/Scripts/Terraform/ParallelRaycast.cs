@@ -25,9 +25,9 @@ public static class ParallelRaycast {
     }
 
     public static RaycastHit[] PointsToSurface(Vector2[] points, string layerName, Bounds bounds) {
-        NativeArray<RaycastCommand> raycastCommands = new NativeArray<RaycastCommand>(points.Length, Allocator.TempJob);
-        NativeArray<RaycastHit> raycastHits = new NativeArray<RaycastHit>(points.Length, Allocator.TempJob);
-        NativeArray<Vector2> pointsOS = new NativeArray<Vector2>(points.Length, Allocator.TempJob);
+        NativeArray<RaycastCommand> raycastCommands = new NativeArray<RaycastCommand>(points.Length, Allocator.Persistent);
+        NativeArray<RaycastHit> raycastHits = new NativeArray<RaycastHit>(points.Length, Allocator.Persistent);
+        NativeArray<Vector2> pointsOS = new NativeArray<Vector2>(points.Length, Allocator.Persistent);
 
         pointsOS.CopyFrom(points);
         PrepareRaycastJob prepareRaycastJob = new() {
@@ -41,7 +41,13 @@ public static class ParallelRaycast {
         JobHandle handle = prepareRaycastJob.Schedule(raycastCommands.Length, batchSize, default);
         handle = RaycastCommand.ScheduleBatch(raycastCommands, raycastHits, batchSize, 1, handle);
         handle.Complete();
-        
-        return raycastHits.ToArray();
+
+        RaycastHit[] hits = raycastHits.ToArray();
+
+        raycastCommands.Dispose();
+        raycastHits.Dispose();
+        pointsOS.Dispose();
+
+        return hits;
     }
 }

@@ -40,8 +40,7 @@ public class WaypointProcessor {
     private ProceduralGrassRenderer grassRenderer;
     private Material grassMaterial;
     private Material replacementGrassMaterial;
-    private GameObject terraformer;
-
+    
     public WaypointProcessor(CameraDefinition cameraDefinition, SurveyArea surveyArea, Georeferencing georeferencing, int totalWaypoints, string folderPath) {
         // Build GameObject
         gameObject = new GameObject("Image Capture");
@@ -70,8 +69,6 @@ public class WaypointProcessor {
         this.geoTagger = new GeoTagger(cameraDefinition, georeferencing);
         this.georeferencing = georeferencing;
 
-        terraformer = GameObject.Find("Terraformer");
-        if (terraformer == null) { Debug.Log("Terraformer not found"); };
         saveSegmentationImages = Camera.main.GetComponent<DroneControl>().saveSegmentationImages;
         if (saveSegmentationImages)
         {
@@ -80,7 +77,7 @@ public class WaypointProcessor {
 
             this.objectTagColors = new Dictionary<string, Color>();
 
-            grassRenderer = terraformer.GetComponent<ProceduralGrassRenderer>();
+            grassRenderer = GameObject.FindObjectOfType<ProceduralGrassRenderer>();
             grassMaterial = grassRenderer.instantiatedMaterial;
             replacementGrassMaterial = new Material(this.grassShader);
 
