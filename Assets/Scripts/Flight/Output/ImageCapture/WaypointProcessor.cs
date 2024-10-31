@@ -133,6 +133,8 @@ public class WaypointProcessor {
                 RenderTexture.active = renderTexture;
                 screenShot.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
                 RenderTexture.active = null; //Added to avoid errors
+                renderTexture.Release();
+                segRenderTexture.Release();
 
                 yield return null;
 
@@ -145,6 +147,7 @@ public class WaypointProcessor {
                 // Save the texture into disk and then delete it
                 SaveImage(screenShot, imageName);
                 Object.Destroy(screenShot);
+                System.GC.Collect();
 
                 yield return null;
 
@@ -156,8 +159,6 @@ public class WaypointProcessor {
                 // Render the camera and store it in a texture
                 if(saveSegmentationImages)
                 {
-                    segGameObject.transform.SetPositionAndRotation(waypoint.dronePosition, waypoint.droneRotation);
-
                     foreach (GameObject go in this.objectsToRender)
                     {
                         Renderer rd = go.GetComponent<Renderer>();
@@ -182,8 +183,11 @@ public class WaypointProcessor {
 
                     grassRenderer.instantiatedMaterial = replacementGrassMaterial;
                     grassRenderer.SetPointsBuffersAndKernel();
+                    //yield return new WaitForSeconds(0.5f);
 
                     yield return null;
+                    
+                    segGameObject.transform.SetPositionAndRotation(waypoint.dronePosition, waypoint.droneRotation);
 
                     Texture2D screenShotSegmented = new Texture2D(segRenderTexture.width, segRenderTexture.height, TextureFormat.RGB24, false);
                     segCamera.Render();
@@ -194,7 +198,25 @@ public class WaypointProcessor {
                     RenderTexture.active = segRenderTexture;
                     screenShotSegmented.ReadPixels(new Rect(0, 0, segRenderTexture.width, segRenderTexture.height), 0, 0);
                     RenderTexture.active = null; //Added to avoid errors
+                    renderTexture.Release();
+                    segRenderTexture.Release();
 
+                    yield return null;
+
+                    // Check for visible GCPs from the curreny waypoint
+                    string imageNameSegmented = GetImageSegmentedName(waypointData.waypointNumber);
+                    //gcpManager.CheckForVisibleGCPs(screenShotSegmented, camera, imageNameSegmented);
+
+                    yield return null;
+
+                    // Save the texture into disk and then delete it
+                    SaveImage(screenShotSegmented, imageNameSegmented);
+                    Object.Destroy(screenShotSegmented);
+                    System.GC.Collect();
+                    yield return null;
+
+                    // Geotag the image properly
+                    geoTagger.TagImage(waypoint, Path.Combine(folderPath, imageNameSegmented));
                     yield return null;
 
                     foreach (GameObject go in this.objectsToRender)
@@ -219,27 +241,11 @@ public class WaypointProcessor {
                     }
                     grassRenderer.instantiatedMaterial = grassMaterial;
                     grassRenderer.SetPointsBuffersAndKernel();
-                    yield return null;
-
-                    // Check for visible GCPs from the curreny waypoint
-                    string imageNameSegmented = GetImageSegmentedName(waypointData.waypointNumber);
-                    gcpManager.CheckForVisibleGCPs(screenShotSegmented, camera, imageNameSegmented);
-
-                    yield return null;
-
-                    // Save the texture into disk and then delete it
-                    SaveImage(screenShotSegmented, imageNameSegmented);
-                    Object.Destroy(screenShotSegmented);
-                    yield return null;
-
-                    // Geotag the image properly
-                    geoTagger.TagImage(waypoint, Path.Combine(folderPath, imageNameSegmented));
-
+                    //yield return new WaitForSeconds(0.5f);
                     yield return null;
                 }
-
-
-
+                yield return null;
+                
                 // Update number or waypoints processed
                 waypointsProcessed++;
             } else {
@@ -253,6 +259,9 @@ public class WaypointProcessor {
         // Destroy the created GameObject and render texture
         Object.Destroy(gameObject);
         Object.Destroy(renderTexture);
+        Object.Destroy(segRenderTexture);
+        Object.Destroy(segGameObject);
+
 
         // Write GCP file to disk
         gcpManager.WriteToFile(georeferencing, folderPath);
@@ -306,7 +315,7 @@ public class WaypointProcessor {
 
     private void SetObjectsToSegment()
     {
-        List<string> tags = new List<string> { "Terrain", "Trunk", "Canopy", "Branches", "Bushes", "Understorey", "Cactae", "Deadwood", "GCP" };//, "Grass" };
+        List<string> tags = new List<string> { "Terrain", "Trunk", "Canopy", "Branches", "Bushes", "Understorey", "Deadwood", "GCP" };//, "Cactae", "Grass" };
         
         foreach (string tag in tags)
         {
